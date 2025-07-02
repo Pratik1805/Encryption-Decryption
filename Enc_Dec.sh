@@ -17,21 +17,23 @@ function progressbar() {
 
 function encrypt_file(){
 	file_to_encrypt="$1"
-	Password_to_Protect_file=$2
 
 	if [ ! -f "${file_to_encrypt}"  ]
 	then
 		echo "File not found"
 		return 1
 	fi
+
+	read -sp "Enter Password for the file: " PASSWORD
 	
 	# Encrypt the specified file using symmetric encryption with the provided password.
 	# --batch: run in non-interactive mode (required when using in scripts).
 	# --yes: automatically overwrite output file if it exists.
 	# --passphrase: supplies the password non-interactively for encryption.
 	# -c: use symmetric encryption (instead of public-key).
-	gpg --batch --yes --passphrase "${Password_to_Protect_file}" -c "$file_to_encrypt"
-	
+	gpg --batch --yes --passphrase "${PASSWORD}" -c "$file_to_encrypt"
+	progressbar "Encrypting"
+
 	if [ $? -eq 0  ]
 	then
 		echo "Encrypted: ${file_to_encrypt}.gpg"
@@ -50,6 +52,7 @@ function decrypt_file(){
 	fi
 
 	gpg -d "${file_to_decrypt}" > "${file_to_decrypt}.txt"
+	progressbar "Decrypting"
 
 	if [ $? -eq 0  ]
 	then
@@ -78,13 +81,9 @@ read -p "So what will you choose[1/2]: " choice
 
 case "${choice}" in
 
-	1) progressbar "Encrypting"
-	   read -sp "Enter Password for the file: " PASSWORD
-	   echo ""
-	   encrypt_file "${file}" ${PASSWORD}
+	1) encrypt_file "${file}"
 	   ;;  
-	2) progressbar "Decrypting" 
-	   decrypt_file "${file}"
+	2) decrypt_file "${file}"
 	   ;;
 	*) echo "Invalid choice" ;;
 esac
