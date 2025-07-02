@@ -1,4 +1,0 @@
-This is a secret message.
-Only authorized users should be able to read this.
-
-password : Valar Morghulis
