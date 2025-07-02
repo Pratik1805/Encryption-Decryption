@@ -17,6 +17,7 @@ function progressbar() {
 
 function encrypt_file(){
 	file_to_encrypt="$1"
+	Password_to_Protect_file=$2
 
 	if [ ! -f "${file_to_encrypt}"  ]
 	then
@@ -24,7 +25,12 @@ function encrypt_file(){
 		return 1
 	fi
 	
-	gpg -c "$file_to_encrypt"
+	# Encrypt the specified file using symmetric encryption with the provided password.
+	# --batch: run in non-interactive mode (required when using in scripts).
+	# --yes: automatically overwrite output file if it exists.
+	# --passphrase: supplies the password non-interactively for encryption.
+	# -c: use symmetric encryption (instead of public-key).
+	gpg --batch --yes --passphrase "${Password_to_Protect_file}" -c "$file_to_encrypt"
 	
 	if [ $? -eq 0  ]
 	then
@@ -43,7 +49,7 @@ function decrypt_file(){
 		return 1
 	fi
 
-	gpg "${file_to_decrypt}"
+	gpg -d "${file_to_decrypt}" > "${file_to_decrypt}.txt"
 
 	if [ $? -eq 0  ]
 	then
@@ -67,13 +73,15 @@ echo "Select below options to proceed:"
 echo "Choose 1 to Encrypt a file"
 echo ""
 echo "Choose 2 to Decrypt a file"
-
-read -p "So what will you choose[1/2/3]: " choice
+echo ""
+read -p "So what will you choose[1/2]: " choice
 
 case "${choice}" in
 
 	1) progressbar "Encrypting"
-	   encrypt_file "${file}"
+	   read -sp "Enter Password for the file: " PASSWORD
+	   echo ""
+	   encrypt_file "${file}" ${PASSWORD}
 	   ;;  
 	2) progressbar "Decrypting" 
 	   decrypt_file "${file}"
@@ -81,7 +89,7 @@ case "${choice}" in
 	*) echo "Invalid choice" ;;
 esac
 
-
+gpgconf --kill gpg-agent #FLush gpg cache immediately which stores password for some time
 echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Thanks ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 
 
